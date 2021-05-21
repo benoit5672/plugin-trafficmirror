@@ -1,0 +1,10 @@
+{
+  "name": "node-trafficmirror",
+  "version": "1.0.0",
+  "description": "nodejs traffic mirror",
+  "main": "trafficmirror.js",
+  "author": "benoit5672",
+  "license": "GNUv3",
+  "dependencies": {
+  }
+}

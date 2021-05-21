@@ -22,5 +22,5 @@ require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
   function template_pre_update() {
 
   }
-  
+
 ?>

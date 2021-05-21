@@ -3,7 +3,7 @@ if (!isConnect('admin')) {
 	throw new Exception('{{401 - Accès non autorisé}}');
 }
 // Déclaration des variables obligatoires
-$plugin = plugin::byId('template');
+$plugin = plugin::byId('trafficmirror');
 sendVarToJS('eqType', $plugin->getId());
 $eqLogics = eqLogic::byType($plugin->getId());
 ?>
@@ -24,11 +24,21 @@ $eqLogics = eqLogic::byType($plugin->getId());
 				<br>
 				<span>{{Configuration}}</span>
 			</div>
+			<div class="cursor pluginAction logoSecondary" data-action="openLocation" data-location="<?=$plugin->getDocumentation()?>">
+			    <i class="fas fa-book"></i>
+			    <br>
+			    <span>{{Documentation}}</span>
+			</div>
+			<div class="cursor pluginAction logoSecondary" data-action="openLocation" data-location="https://community.jeedom.com/tags/plugin-<?=$plugin->getId()?>">
+			    <i class="fas fa-comments"></i>
+			    <br>
+			    <span>Community</span>
+		    </div>
 		</div>
-		<legend><i class="fas fa-table"></i> {{Mes templates}}</legend>
+		<legend><i class="fas fa-table"></i> {{Mes Miroirs}}</legend>
 		<?php
 		if (count($eqLogics) == 0) {
-			echo '<br/><div class="text-center" style="font-size:1.2em;font-weight:bold;">{{Aucun équipement Template n\'est paramétré, cliquer sur "Ajouter" pour commencer}}</div>';
+			echo '<br/><div class="text-center" style="font-size:1.2em;font-weight:bold;">{{Aucun équipement Miroir n\'est paramétré, cliquer sur "Ajouter" pour commencer}}</div>';
 		} else {
 			// Champ de recherche
 			echo '<div class="input-group" style="margin:5px;">';
@@ -78,7 +88,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 				<!-- Paramètres généraux de l'équipement -->
 				<form class="form-horizontal">
 					<fieldset>
-						<div class="col-lg-6">
+						<div class="col-sm-9">
 							<legend><i class="fas fa-wrench"></i> {{Général}}</legend>
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{Nom de l'équipement}}</label>
@@ -125,43 +135,42 @@ $eqLogics = eqLogic::byType($plugin->getId());
 
 							<legend><i class="fas fa-cogs"></i> {{Paramètres}}</legend>
 							<div class="form-group">
-								<label class="col-sm-3 control-label">{{Nom du paramètre n°1}}</label>
+								<label class="col-sm-3 control-label">{{Local Port}}</label>
 								<div class="col-sm-7">
-									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="param1" placeholder="{{Paramètre n°1}}"/>
+									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="localPort" placeholder="{{local port}}"/>
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label"> {{Mot de passe}}</label>
+								<label class="col-sm-3 control-label">{{Destination}}</label>
 								<div class="col-sm-7">
-									<input type="text" class="eqLogicAttr form-control inputPassword" data-l1key="configuration" data-l2key="password"/>
+									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="targetHost" placeholder="{{IP ou FQDN destination}}"/>
 								</div>
 							</div>
-							<!-- Champ de saisie du cron d'auto-actualisation + assistant cron -->
-							<!-- La fonction cron de la classe du plugin doit contenir le code prévu pour que ce champ soit fonctionnel -->
 							<div class="form-group">
-								<label class="col-sm-3 control-label">{{Auto-actualisation}}
-									<sup><i class="fas fa-question-circle tooltips" title="{{Fréquence de rafraîchissement de l'équipement}}"></i></sup>
-								</label>
+								<label class="col-sm-3 control-label">{{Destination Port}}</label>
 								<div class="col-sm-7">
-									<div class="input-group">
-										<input type="text" class="eqLogicAttr form-control roundedLeft" data-l1key="configuration" data-l2key="autorefresh" placeholder="{{Cliquer sur ? pour afficher l'assistant cron}}"/>
-										<span class="input-group-btn">
-											<a class="btn btn-default cursor jeeHelper roundedRight" data-helper="cron" title="Assistant cron">
-												<i class="fas fa-question-circle"></i>
-											</a>
-										</span>
-									</div>
+									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="targetPort" placeholder="{{port destination}}"/>
 								</div>
 							</div>
-						</div>
-
-						<!-- Partie droite de l'onglet "Équipement" -->
-						<!-- Affiche l'icône du plugin par défaut mais vous pouvez y afficher les informations de votre choix -->
-						<div class="col-lg-6">
-							<legend><i class="fas fa-info"></i> {{Informations}}</legend>
 							<div class="form-group">
-								<div class="text-center">
-									<img name="icon_visu" src="<?= $plugin->getPathImgIcon(); ?>" style="max-width:160px;"/>
+								<label class="col-sm-3 control-label"> {{Mirroir}}</label>
+								<div class="col-sm-7">
+									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mirrorHost" placeholder="{{IP ou FQDN du mirroir}}"/>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label"> {{Mirroir port}}</label>
+								<div class="col-sm-7">
+									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mirrorPort" placeholder="{{port du mirroir}}"/>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label"> {{Protocole}}</label>
+								<div class="col-sm-7">
+									<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="protocol">
+										<option value="tcp" selected="selected">{{TCP}}</option>
+										<option value="udp">{{UDP}}</option>
+									</select>
 								</div>
 							</div>
 						</div>
@@ -172,7 +181,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
 
 			<!-- Onglet des commandes de l'équipement -->
 			<div role="tabpanel" class="tab-pane" id="commandtab">
-				<a class="btn btn-default btn-sm pull-right cmdAction" data-action="add" style="margin-top:5px;"><i class="fas fa-plus-circle"></i> {{Ajouter une commande}}</a>
 				<br/><br/>
 				<div class="table-responsive">
 					<table id="table_cmd" class="table table-bordered table-condensed">
@@ -180,9 +188,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							<tr>
 								<th>{{Id}}</th>
 								<th>{{Nom}}</th>
-								<th>{{Type}}</th>
 								<th>{{Options}}</th>
-								<th>{{Paramètres}}</th>
 								<th>{{Action}}</th>
 							</tr>
 						</thead>
@@ -197,6 +203,6 @@ $eqLogics = eqLogic::byType($plugin->getId());
 </div><!-- /.row row-overflow -->
 
 <!-- Inclusion du fichier javascript du plugin (dossier, nom_du_fichier, extension_du_fichier, id_du_plugin) -->
-<?php include_file('desktop', 'template', 'js', 'template');?>
+<?php include_file('desktop', 'trafficmirror', 'js', 'trafficmirror');?>
 <!-- Inclusion du fichier javascript du core - NE PAS MODIFIER NI SUPPRIMER -->
 <?php include_file('core', 'plugin.template', 'js');?>
