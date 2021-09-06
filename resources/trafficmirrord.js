@@ -186,10 +186,8 @@ server.delete('/mirrors/:id', (req,res) => {
     const id   = req.params.id
     var mirror = mirrors[id];
     if (mirror !== undefined) {
-        // remove from array
-        mirrors.splice(mirrors.indexOf(mirror),1);
-        // delete the object !
-        delete(mirror);
+        // remove from hash
+        delete mirrors[id];
         res.sendStatus(204);
         log.info('Le miroir '  + id + ' a été supprimé. Nombre de miroirs : ' + Object.keys(mirrors).length);
     } else {
