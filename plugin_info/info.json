@@ -1,6 +1,6 @@
 {
 	"id" : "trafficmirror",
-	"name" : "trafficmirror",
+	"name" : "Traffic Mirror",
 	"description" : {
 		"fr_FR": "Mirror le traffic d'un serveur vers un autre serveur",
 		"en_US": "Mirror the traffic to a mirror server"
