@@ -324,6 +324,7 @@ class trafficmirror extends eqLogic {
 		   'targetRxPkts', 'targetTxPkts', 'targetErrPkts',
 		   'mirrorRxPkts', 'mirrorTxPkts', 'mirrorErrPkts',
 	   ];
+	   log::add('trafficmirror', 'debug', 'updateStatistics: ' . print_r($stats, true));
 	   foreach ($infos as $info) {
 		   $this->checkAndUpdateCmd($info, $stats[$info]);
 	   }
@@ -340,12 +341,34 @@ class trafficmirror extends eqLogic {
 	 */
       public static function cron5() {
 		  /* Do the polling to get statistics from the daemon */
-		  $mirrors = self::daemonGetMirrors();
-		  foreach ($mirrors as $mirror) {
-		  	 if(is_object($mirror) && $mirror->getIsEnable() == 1) {
-			 	 $mirror->updateStatistics();
+		  $daemon_mirrors = self::daemonGetMirrors();
+
+		  // 1. get all eqLogic mirror objects and update with the information
+		  // fetch from daemon
+  		  foreach (self::byType(__CLASS__) as $mirror) {
+              if (is_object($mirror) && $mirror->getIsEnable() == 1) {
+				  $stats = $daemon_mirrors[$mirror->getId()];
+				  if ($stats === undefined) {
+					  log::add('trafficmirror', 'error',
+					           __('Le miroir ' . $mirror->getId() . 'n\'est pas présent dans le démon', __FILE__));
+					  $mirror->daemonAddMirror();
+					  continue;
+				  }
+			 	  $mirror->updateStatistics($stats);
+
+				  // 2. delete the informartion
+				  unset($daemon_mirrors[$mirror->getId()]);
 			 }
   		  }
+		  // 3. $daemon_mirrors should be empty, otherwise we have zombies
+		  foreach ($daemon_mirrors as $key => $value) {
+			  log::add('trafficmirror', 'error',
+					   __('Le miroir ' . $mirror->getId() . 'est pas présent dans le démon mais pas dans la configuration', __FILE__));
+			  try {
+				  return self::daemonCommunication('DELETE', array('id' => $this->getId()));
+			  } catch (Exception $e) {
+   		      }
+		  }
       }
 
     /*
@@ -508,7 +531,7 @@ class trafficmirror extends eqLogic {
         	}
 			$cmd->setEqLogic_id($this->getId());
 			$cmd->setType('info');
-			$cmd->setSubType('mumerical');
+			$cmd->setSubType('numeric');
         	$cmd->save();
 			$this->checkAndUpdateCmd($stat, 0);
 		}
