@@ -57,7 +57,7 @@ server.get('/mirrors/:id', (req,res) => {
         res.status(200).json(mirror);
     } else {
         res.sendStatus(404);
-        log.warning('Le miroir '  + id + ' n\'existe pas');
+        log.warning('Le miroir '  + req.params.id + ' n\'existe pas');
     }
 })
 
@@ -135,13 +135,19 @@ server.put('/mirrors/:id', (req,res) => {
             options['protocol'] = req.body.protocol;
         }
         if (req.body.clientConnections !== undefined) {
-            options['clientConnections'] = req.body.clientConnetions;
+            options['clientConnections'] = req.body.clientConnections;
         }
         if (req.body.targetConnections !== undefined) {
-            options['targetConnections'] = req.body.targetConnetions;
+            options['targetConnections'] = req.body.targetConnections;
+        }
+        if (req.body.targetErrConnect !== undefined) {
+            options['targetErrConnect'] = req.body.targetErrConnect;
         }
         if (req.body.mirrorConnections !== undefined) {
-            options['mirrorConnections'] = req.body.mirrorConnetions;
+            options['mirrorConnections'] = req.body.mirrorConnections;
+        }
+        if (req.body.mirrorErrConnect !== undefined) {
+            options['mirrorErrConnect'] = req.body.mirrorErrConnect;
         }
         if (req.body.clientRxPkts !== undefined) {
             options['clientRxPkts'] = req.body.clientRxPkts;
