@@ -345,7 +345,6 @@ class trafficmirror extends eqLogic {
       public static function cron5() {
 		  /* Do the polling to get statistics from the daemon */
 		  $daemon_mirrors = self::daemonGetMirrors();
-		  log::add('trafficmirror', 'debug', 'cron5::getMirrors = ' . print_r($daemon_mirrors, true));
 
 		  // 1. get all eqLogic mirror objects and update with the information
 		  // fetch from daemon

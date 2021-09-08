@@ -23,6 +23,7 @@ const net    = require('net');
 const util   = require('util');
 const logger = require('./util_log');
 
+
 /** PUBLIC function */
 module.exports.createTcpMirror = function(options) {
 
@@ -38,33 +39,38 @@ function uniqueKey(socket) {
 
 function TcpMirror(options) {
 
-    this.id                = options['id'];
-    this.localAddr         = options['localAddr'];
-    this.localPort         = options['localPort'];
-    this.mirrorHost        = options['mirrorHost'];
-    this.mirrorPort        = options['mirrorPort'];
-    this.targetHost        = options['targetHost'];
-    this.targetPort        = options['targetPort'];
-    this.isListening       = false;
-    this.clientConnections = options['clientConnections'] || 0;
-    this.targetConnections = options['targetConnections'] || 0;
-    this.mirrorConnections = options['mirrorConnections'] || 0;
-    this.clientRxPkts      = options['clientRxPkts'] || 0;
-    this.clientTxPkts      = options['clientTxPkts'] || 0;
-    this.targetRxPkts      = options['targetRxPkts'] || 0;
-    this.targetTxPkts      = options['targetTxPkts'] || 0;
-    this.targetErrPkts     = options['targetErrPkts'] || 0;
-    this.mirrorRxPkts      = options['mirrorRxPkts'] || 0;
-    this.mirrorTxPkts      = options['mirrorTxPkts'] || 0;
-    this.mirrorErrPkts     = options['mirrorErrPkts'] || 0;
-    this.acceptedSockets   = {};
-    this.log               = logger.createLogger('daemon-' + this.id, options['loglevel']);
+    this.id                   = options['id'];
+    this.localAddr            = options['localAddr'];
+    this.localPort            = options['localPort'];
+    this.mirrorHost           = options['mirrorHost'];
+    this.mirrorPort           = options['mirrorPort'];
+    this.targetHost           = options['targetHost'];
+    this.targetPort           = options['targetPort'];
+    this.isListening          = false;
+    this.clientConnections    = options['clientConnections'] || 0;
+    this.targetConnections    = options['targetConnections'] || 0;
+    this.targetErrConnect     = options['targetErrConnect'] || 0;
+    this.mirrorConnections    = options['mirrorConnections'] || 0;
+    this.mirrorErrConnect     = options['mirrorErrConnect'] || 0;
+    this.clientRxPkts         = options['clientRxPkts'] || 0;
+    this.clientTxPkts         = options['clientTxPkts'] || 0;
+    this.targetRxPkts         = options['targetRxPkts'] || 0;
+    this.targetTxPkts         = options['targetTxPkts'] || 0;
+    this.targetErrPkts        = options['targetErrPkts'] || 0;
+    this.mirrorRxPkts         = options['mirrorRxPkts'] || 0;
+    this.mirrorTxPkts         = options['mirrorTxPkts'] || 0;
+    this.mirrorErrPkts        = options['mirrorErrPkts'] || 0;
+    this.acceptedSockets      = {};
+    this.log                  = logger.createLogger('daemon-' + this.id, options['loglevel']);
 
 
     this.log.info(util.format('TCP listen on %s:%d, target %s:%d, mirror %s:%d',
                   this.localAddr, this.localPort, this.targetHost,
                   this.targetPort, this.mirrorHost, this.mirrorPort));
+
+    // start the server
     this.createServer();
+
 }
 
 TcpMirror.prototype.toJSON = function() {
@@ -82,7 +88,9 @@ TcpMirror.prototype.toJSON = function() {
                 activeConnections: Object.keys(self.acceptedSockets).length,
                 clientConnections: self.clientConnections,
                 targetConnections: self.targetConnections,
+                targetErrConnect : self.targetErrConnect,
                 mirrorConnections: self.mirrorConnections,
+                mirrorErrConnect: self.mirrorErrConnect,
                 clientRxPkts: self.clientRxPkts,
                 clientTxPkts: self.clientTxPkts,
                 targetRxPkts: self.targetRxPkts,
@@ -202,9 +210,11 @@ TcpMirror.prototype.handleClient = function(clientSocket) {
 
 
 TcpMirror.prototype.createTargetSocket = function(context) {
-    this.log.debug("clientSocket: createTargetSocket");
-
     var self = this;
+
+    self.log.debug(util.format("clientSocket: createTargetSocket (%s/%d)",
+                   self.targetHost, self.targetPort));
+
     var options = Object.assign({
         port: self.targetPort,
         host: self.targetHost,
@@ -250,15 +260,17 @@ TcpMirror.prototype.createTargetSocket = function(context) {
         self.log.debug("targetSocket: onError: " + e);
         if (e.code === 'ECONNREFUSED') {
             self.log.error(util.format("Unable to connect to target (%s:%d), aborting client connection", self.targetHost, self.targetPort));
+            self.targetErrConnect++;
         }
         context.clientSocket.destroy();
     });
 };
 
 TcpMirror.prototype.createMirrorSocket = function(context) {
-    this.log.debug("clientSocket: createMirrorSocket");
-
     var self = this;
+
+    self.log.debug(util.format("clientSocket: createMirrorSocket (%s/%d)",
+                   self.mirrorHost, self.mirrorPort));
     var options = Object.assign({
         port: self.mirrorPort,
         host: self.mirrorHost,
@@ -294,6 +306,7 @@ TcpMirror.prototype.createMirrorSocket = function(context) {
         self.log.debug("mirrorSocket: onError: " + e);
         if (e.code === 'ECONNREFUSED') {
             self.log.error(util.format("Unable to connect to mirror (%s:%d), aborting client connection", self.mirrorHost, self.mirrorPort));
+            self.mirrorErrConnect++;
         }
         context.clientSocket.destroy();
     });
