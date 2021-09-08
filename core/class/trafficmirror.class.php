@@ -199,7 +199,7 @@ class trafficmirror extends eqLogic {
             $nbRetry++;
             if (curl_errno($ch) && $nbRetry < $maxRetry) {
                 curl_close($ch);
-                usleep($this->getSleepTime());
+                usleep(500000);
             } else {
                 $nbRetry = $maxRetry + 1;
             }
@@ -284,7 +284,7 @@ class trafficmirror extends eqLogic {
 						 'protocol'   => $this->getConfiguration('protocol'),
 					  );
 		try {
-			$this->daemonCommunication('PUT', $payload);
+			self::daemonCommunication('PUT', $payload);
 		} catch (Exception $e) {
 			log::add('trafficmirror', 'error', 'Erreur: ' . $e->getMessage());
 		}
@@ -298,6 +298,8 @@ class trafficmirror extends eqLogic {
 						 'clientConnections' => 0,
 						 'targetConnections' => 0,
 						 'mirrorConnections' => 0,
+						 'targetErrConnect'  => 0,
+						 'mirrorErrConnect'  => 0,
 						 'clientRxPkts'      => 0,
 						 'clientTxPkts'      => 0,
 						 'targetRxPkts'      => 0,
@@ -320,6 +322,7 @@ class trafficmirror extends eqLogic {
 		$infos = [
 		   'isListening',
 		   'clientConnections', 'targetConnections', 'mirrorConnections',
+		   'targetErrConnect', 'mirrorErrConnect',
 		   'clientRxPkts', 'clientTxPkts',
 		   'targetRxPkts', 'targetTxPkts', 'targetErrPkts',
 		   'mirrorRxPkts', 'mirrorTxPkts', 'mirrorErrPkts',
@@ -342,6 +345,7 @@ class trafficmirror extends eqLogic {
       public static function cron5() {
 		  /* Do the polling to get statistics from the daemon */
 		  $daemon_mirrors = self::daemonGetMirrors();
+		  log::add('trafficmirror', 'debug', 'cron5::getMirrors = ' . print_r($daemon_mirrors, true));
 
 		  // 1. get all eqLogic mirror objects and update with the information
 		  // fetch from daemon
@@ -351,7 +355,6 @@ class trafficmirror extends eqLogic {
 				  if ($stats === undefined) {
 					  log::add('trafficmirror', 'error',
 					           __('Le miroir ' . $mirror->getId() . 'n\'est pas présent dans le démon', __FILE__));
-					  $mirror->daemonAddMirror();
 					  continue;
 				  }
 			 	  $mirror->updateStatistics($stats);
@@ -363,11 +366,7 @@ class trafficmirror extends eqLogic {
 		  // 3. $daemon_mirrors should be empty, otherwise we have zombies
 		  foreach ($daemon_mirrors as $key => $value) {
 			  log::add('trafficmirror', 'error',
-					   __('Le miroir ' . $mirror->getId() . 'est pas présent dans le démon mais pas dans la configuration', __FILE__));
-			  try {
-				  return self::daemonCommunication('DELETE', array('id' => $this->getId()));
-			  } catch (Exception $e) {
-   		      }
+					   __('Le miroir ' . $key . 'n\'est pas présent dans le démon mais pas dans la configuration', __FILE__));
 		  }
       }
 
@@ -454,12 +453,20 @@ class trafficmirror extends eqLogic {
 
 		// Send the information to the daemon. Update if necessary, otherwise create
 		// the new object
-		if (count($this->daemonGetMirror()) === 0) {
-			$this->daemonAddMirror();
-		} else {
-			$this->daemonUpdateMirror();
+		$isInDaemon = (count($this->daemonGetMirror()) > 0);
+		if ($this->getIsEnable() == 1) {
+			if ($isInDaemon === false) {
+				$this->daemonAddMirror();
+			} else {
+				$this->daemonUpdateMirror();
+			}
+    	} else {
+			// The mirror has been disabled, remove it from the daemon
+			if ($isInDaemon === true) {
+				$this->daemonDeleteMirror();
+			}
 		}
-    }
+	}
 
  // Fonction exécutée automatiquement avant la sauvegarde (création ou mise à jour) de l'équipement
     public function preSave() {
@@ -516,6 +523,7 @@ class trafficmirror extends eqLogic {
 
 		$stats = [
 			'clientConnections', 'targetConnections', 'mirrorConnections',
+			'targetErrConnect', 'mirrorErrConnect',
 			'clientRxPkts', 'clientTxPkts',
 			'targetRxPkts', 'targetTxPkts', 'targetErrPkts',
 			'mirrorRxPkts', 'mirrorTxPkts', 'mirrorErrPkts',
@@ -568,6 +576,7 @@ class trafficmirror extends eqLogic {
 	 	 $this->daemonClearStatistics();
 		 $stats = [
  			'clientConnections', 'targetConnections', 'mirrorConnections',
+			'targetErrConnect', 'mirrorErrConnect',
  			'clientRxPkts', 'clientTxPkts',
  			'targetRxPkts', 'targetTxPkts', 'targetErrPkts',
  			'mirrorRxPkts', 'mirrorTxPkts', 'mirrorErrPkts',
