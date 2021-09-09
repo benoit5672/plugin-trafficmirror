@@ -173,7 +173,6 @@ TcpMirror.prototype.handleClient = function(clientSocket) {
             self.mirrorTxPkts++;
             context.mirrorSocket.write(data);
         } else {
-            self.mirrorErrPkts;
             context.mirrorBuffer[context.mirrorBuffer.length] = data;
         }
     });
@@ -229,9 +228,11 @@ TcpMirror.prototype.createTargetSocket = function(context) {
 
         if (context.targetBuffer.length > 0) {
             for (var i = 0; i < context.targetBuffer.length; i++) {
+                self.targetTxPkts++;
                 context.targetSocket.write(context.targetBuffer[i]);
             }
         }
+        context.targetBuffer      = [];
         context.isTargetConnected = true;
     });
 
@@ -247,12 +248,13 @@ TcpMirror.prototype.createTargetSocket = function(context) {
             self.mirrorTxPkts++;
             context.mirrorSocket.write(data);
         } else {
-            self.mirrorErrPkts++;
+            context.mirrorBuffer[context.mirrorBuffer.length] = data;
         }
     });
 
     context.targetSocket.on("close", function(hadError) {
         self.log.debug("targetSocket: onClose");
+        self.targetErrPkts += context.targetBuffer.length;
         context.clientSocket.destroy();
     });
 
@@ -285,9 +287,11 @@ TcpMirror.prototype.createMirrorSocket = function(context) {
         self.mirrorConnections++;
         if (context.mirrorBuffer.length > 0) {
             for (var i = 0; i < context.mirrorBuffer.length; i++) {
+                self.mirrorTxPkts++;
                 context.mirrorSocket.write(context.mirrorBuffer[i]);
             }
         }
+        context.mirrorBuffer      = [];
         context.isMirrorConnected = true;
     });
 
@@ -299,6 +303,7 @@ TcpMirror.prototype.createMirrorSocket = function(context) {
 
     context.mirrorSocket.on("close", function(hadError) {
         self.log.debug("mirrorSocket: onClose");
+        self.mirrorErrPkts += context.mirrorBuffer.length;
         context.clientSocket.destroy();
     });
 
