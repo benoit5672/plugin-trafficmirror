@@ -46,6 +46,8 @@ function TcpMirror(options) {
     this.mirrorPort           = options['mirrorPort'];
     this.targetHost           = options['targetHost'];
     this.targetPort           = options['targetPort'];
+    this.clientTX             = options['clientTX'] || 1;
+    this.targetRX             = options['targetRX'] || 0;
     this.isListening          = false;
     this.clientConnections    = options['clientConnections'] || 0;
     this.targetConnections    = options['targetConnections'] || 0;
@@ -84,6 +86,8 @@ TcpMirror.prototype.toJSON = function() {
                 mirrorHost: self.mirrorHost,
                 mirrorPort: self.mirrorPort,
                 protocol: 'tcp',
+                clientTX : self.clientTX,
+                targetRX : self.targetRX,
                 isListening: self.isListening,
                 activeConnections: Object.keys(self.acceptedSockets).length,
                 clientConnections: self.clientConnections,
@@ -169,11 +173,13 @@ TcpMirror.prototype.handleClient = function(clientSocket) {
             context.targetBuffer[context.targetBuffer.length] = data;
         }
 
-        if (context.isMirrorConnected === true && context.mirrorSocket !== undefined) {
-            self.mirrorTxPkts++;
-            context.mirrorSocket.write(data);
-        } else {
-            context.mirrorBuffer[context.mirrorBuffer.length] = data;
+        if (self.clientTX == 1) {
+            if (context.isMirrorConnected === true && context.mirrorSocket !== undefined) {
+                self.mirrorTxPkts++;
+                context.mirrorSocket.write(data);
+            } else {
+                context.mirrorBuffer[context.mirrorBuffer.length] = data;
+            }
         }
     });
 
@@ -244,11 +250,13 @@ TcpMirror.prototype.createTargetSocket = function(context) {
         self.clientTxPkts++;
         context.clientSocket.write(data);
 
-        if (context.isMirrorConnected === true && context.mirrorSocket !== undefined) {
-            self.mirrorTxPkts++;
-            context.mirrorSocket.write(data);
-        } else {
-            context.mirrorBuffer[context.mirrorBuffer.length] = data;
+        if (self.targetRX == 1) {
+            if (context.isMirrorConnected === true && context.mirrorSocket !== undefined) {
+                self.mirrorTxPkts++;
+                context.mirrorSocket.write(data);
+            } else {
+                context.mirrorBuffer[context.mirrorBuffer.length] = data;
+            }
         }
     });
 

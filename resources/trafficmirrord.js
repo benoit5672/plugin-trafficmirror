@@ -79,13 +79,17 @@ server.post('/mirrors', (req,res) => {
         log.debug('targetHost: ' + req.body.targetHost);
         log.debug('targetPort: ' + req.body.targetPort);
         log.debug('protocol:   ' + req.body.protocol);
+        log.debug('clientTX:   ' + req.body.clientTX);
+        log.debug('targetRX:   ' + req.body.targetRX);
         if (req.body.id !== undefined
             && req.body.localPort  !== undefined
             && req.body.mirrorHost !== undefined
             && req.body.mirrorPort !== undefined
             && req.body.targetHost !== undefined
             && req.body.targetPort !== undefined
-            && req.body.protocol   !== undefined) {
+            && req.body.protocol   !== undefined
+            && req.body.clientTX   !== undefined
+            && req.body.targetRX   !== undefined) {
 
             // Create the mirror
             options = {};
@@ -96,6 +100,8 @@ server.post('/mirrors', (req,res) => {
             options['targetPort'] = req.body.targetPort;
             options['mirrorHost'] = req.body.mirrorHost;
             options['mirrorPort'] = req.body.mirrorPort;
+            options['clientTX']   = req.body.clientTX;
+            options['targetRX']   = req.body.targetRX;
             options['loglevel']   = log.getLogLevel();
             if (req.body.protocol === 'tcp') {
                 var mirror = tcpMirror.createTcpMirror(options);
@@ -133,6 +139,12 @@ server.put('/mirrors/:id', (req,res) => {
         }
         if (req.body.protocol !== undefined) {
             options['protocol'] = req.body.protocol;
+        }
+        if (req.body.clientTX !== undefined) {
+            options['clientTX'] = req.body.clientTX;
+        }
+        if (req.body.targetRX !== undefined) {
+            options['targetRX'] = req.body.targetRX;
         }
         if (req.body.clientConnections !== undefined) {
             options['clientConnections'] = req.body.clientConnections;

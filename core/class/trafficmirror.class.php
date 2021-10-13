@@ -260,6 +260,8 @@ class trafficmirror extends eqLogic {
 						 'targetHost' => $this->getConfiguration('targetHost'),
 						 'targetPort' => $this->getConfiguration('targetPort'),
 						 'protocol'   => $this->getConfiguration('protocol'),
+						 'clientTX'   => $this->getConfiguration('clientTX', 0),
+						 'targetRX'   => $this->getConfiguration('targetRX', 0),
 					  );
 		try {
 			self::daemonCommunication('POST', $payload);
@@ -282,6 +284,8 @@ class trafficmirror extends eqLogic {
 						 'targetHost' => $this->getConfiguration('targetHost'),
 						 'targetPort' => $this->getConfiguration('targetPort'),
 						 'protocol'   => $this->getConfiguration('protocol'),
+						 'clientTX'   => $this->getConfiguration('clientTX', 0),
+						 'targetRX'   => $this->getConfiguration('targetRX', 0),
 					  );
 		try {
 			self::daemonCommunication('PUT', $payload);

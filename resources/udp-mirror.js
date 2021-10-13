@@ -38,6 +38,8 @@ function UdpMirror(options) {
     this.mirrorPort        = options['mirrorPort'];
     this.targetHost        = options['targetHost'];
     this.targetPort        = options['targetPort'];
+    this.clientTX          = options['clientTX'] || 1;
+    this.targetRX          = options['targetRX'] || 0;
     this.isListening       = false;
     this.isMirrorConnected = false;
     this.isTargetConnected = false;
@@ -71,6 +73,8 @@ UdpMirror.prototype.toJSON = function() {
                 targetPort: self.targetPort,
                 mirrorHost: self.mirrorHost,
                 mirrorPort: self.mirrorPort,
+                clientTX: self.clientTX,
+                targetRX: self.targetRX,
                 protocol: 'udp',
                 isListening: self.isListening,
                 activeConnections: 0,
@@ -113,11 +117,13 @@ UdpMirror.prototype.createUDPServer = function() {
             self.targetErrPkts++;
         }
 
-        if (self.isMirrorConnected === true && self.mirrorSocket !== undefined) {
-            self.mirrorTxPkts++;
-            self.mirrorSocket.send(msg);
-        } else {
-            self.mirrorErrPkts;
+        if (self.clientTX == 1) {
+            if (self.isMirrorConnected === true && self.mirrorSocket !== undefined) {
+                self.mirrorTxPkts++;
+                self.mirrorSocket.send(msg);
+            } else {
+                self.mirrorErrPkts;
+            }
         }
     });
 
@@ -178,11 +184,13 @@ UdpMirror.prototype.createTargetSocket = function() {
         self.clientTxPkts++;
         self.server.send(msg);
 
-        if (self.isMirrorConnected === true && self.mirrorSocket !== undefined) {
-            self.mirrorTxPkts++;
-            self.mirrorSocket.send(msg);
-        } else {
-            self.mirrorErrPkts++;
+        if (targetRX == 1) {
+            if (self.isMirrorConnected === true && self.mirrorSocket !== undefined) {
+                self.mirrorTxPkts++;
+                self.mirrorSocket.send(msg);
+            } else {
+                self.mirrorErrPkts++;
+            }
         }
     });
 

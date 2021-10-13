@@ -173,6 +173,13 @@ $eqLogics = eqLogic::byType($plugin->getId());
 									</select>
 								</div>
 							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">{{Paquet a copier}}</label>
+								<div class="col-sm-7">
+								    <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="clientTX" checked/>{{Trafic envoyé par le client}}</label>
+									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="targetRX" />{{Trafic reçu de la destination (serveur)}}</label>
+								</div>
+							</div>
 						</div>
 					</fieldset>
 				</form>
