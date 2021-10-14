@@ -17,6 +17,10 @@ installVer='14' 	#NodeJS major version to be installed
 
 pre
 
+if [ -f ${BASEDIR}/trafficmirror_version ]; then
+	sudo rm -f ${BASEDIR}/trafficmirror_version
+fi
+
 step 0 "Début d'installation des dependances"
 cd ${BASEDIR}
 sudo rm -rf nodes_modules
@@ -29,10 +33,10 @@ try sudo apt-get update
 #install nodejs, steps 10->50
 . ${BASEDIR}/install_nodejs.sh ${installVer}
 
-step 60 "Installation des dependances"
+step 60 "Installation des dépendances"
 sudo npm install
 
-step 90 "Fin d'installation des dependances"
-sudo touch /var/www/html/plugins/trafficmirror/resources/trafficmirror_version
+step 90 "Fin d'installation des dépendances"
+sudo touch ${BASEDIR}/trafficmirror_version
 
 post
