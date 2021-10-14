@@ -12,8 +12,8 @@
 	"hasDependency" : true,
 	"hasOwnDeamon" : true,
 	"maxDependancyInstallTime" : 60,
-	"changelog" : "https://jeedom.github.io/plugin-trafficmirror/#language#/changelog",
-	"documentation" : "https://jeedom.github.io/plugin-trafficmirror/#language#/",
+	"changelog" : "https://benoit5672.github.io/plugin-trafficmirror/#language#/changelog",
+	"documentation" : "https://benoit5672.github.io/plugin-trafficmirror/#language#/",
 	"language" : ["fr_FR","en_US","de_DE","sp_SP"],
 	"compatibility" : ["miniplus","smart","rpi","docker","diy","mobile","v4"]
 }
