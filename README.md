@@ -1,11 +1,7 @@
-# Template de plugin pour Jeedom
+# Plugin trafficmirror
 
-Ce "template de plugin" sert de base à la réalisation de plugins pour **Jeedom**.
+Ce plugin est une extension pour **Jeedom**.
 
-La documentation générale relative à la conception de plugin est consultable [ici](https://doc.jeedom.com/fr_FR/dev/). Dans le détail :   
-* [Utilisation du template de plugin](https://doc.jeedom.com/fr_FR/dev/plugin_template) : Le template de plugin est une base de plugin pour Jeedom qui doit être adaptée avec l'id de votre plugin et à laquelle il suffit d'ajouter vos propres fonctions. 
-* [Fichier info.json](https://doc.jeedom.com/fr_FR/dev/structure_info_json) : Intégré depuis la version 3.0 de Jeedom, le fichier **info.json** est obligatoire pour le bon fonctionnement des plugins et leur bon déploiement sur le Market Jeedom.
-* [Icône du plugin](https://doc.jeedom.com/fr_FR/dev/Icone_de_plugin) : Afin de pouvoir être publié sur le Market Jeedom, tout plugin doit disposer d’une icône. Attention à ne pas utiliser le même code couleur que les icônes des plugins Jeedom officiels.
-* [Widget du plugin](https://doc.jeedom.com/fr_FR/dev/widget_plugin) : Présentation des différentes manières d'inclure des widgets personnalisés au plugin.
-* [Documentation du plugin](https://doc.jeedom.com/fr_FR/dev/documentation_plugin) : Présentation de la mise en place d'une documentation car un bon plugin n'est rien sans documentation adéquate.
-* [Publication du plugin](https://doc.jeedom.com/fr_FR/dev/publication_plugin) : Description des pré-requis indispensables à la publication du plugin.
+Ce plugin permet de dupliquer des flux TCP ou UDP vers un serveur "miroir". Le plugin agit comme un proxy, c'est a dire que les clients vont envoyer leurs requêtes vers le proxy plutôt que vers le serveur destination, et le plugin se chargera de transmettre cette requête au serveur, et au miroir.
+
+Grâce à ce plugin, vous pouvez renvoyer des informations a un serveur de tests, ou comme c'est mon cas, dupliquer les informations pour réaliser le traitement a la fois dans Jeedom, et sur le serveur réel. En effet, ma centrale d'alarme ne me permet pas d'envoyer les meme informations a deux serveurs différents. Donc, ma centrale envoie les informations a trafficmirror, qui se charge de les transmettre a Jeedom et a la télésurveillance. Bien sur, il faut dans ce cas de la redondance pour s'assurer que la centrale pourra toujours communiquer avec la télésurveillance si votre plugin trafficmirror est injoignable.
