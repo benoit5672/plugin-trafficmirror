@@ -71,7 +71,7 @@ class trafficmirror extends eqLogic {
         $deamon_path = dirname(__FILE__) . '/../../resources';
         //$callback = network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/trafficmirror/core/php/trafficmirror.php';
 
-        $cmd  = 'sudo nice -n 19 nodejs "'. $deamon_path . '/trafficmirrord.js" ';
+        $cmd  = 'sudo nice -n 19 node "'. $deamon_path . '/trafficmirrord.js" ';
         $cmd .= ' --port ' . $servicePort;
         $cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel('trafficmirror'));
         //$cmd .= ' --apikey ' . jeedom::getApiKey('trafficmirror');
