@@ -5,10 +5,8 @@
 
 ######################### INCLUSION LIB ##########################
 BASEDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-sudo wget https://raw.githubusercontent.com/NebzHB/dependance.lib/master/dependance.lib -O $BASEDIR/dependance.lib &>/dev/null
+wget https://raw.githubusercontent.com/NebzHB/dependance.lib/master/dependance.lib -O $BASEDIR/dependance.lib &>/dev/null
 PLUGIN=$(basename "$(realpath $BASEDIR/..)")
-sudo mkdir -p /tmp/jeedom/${PLUGIN}
-sudo chmod 777 /tmp/jeedom/${PLUGIN}
 . ${BASEDIR}/dependance.lib
 ##################################################################
 sudo wget https://raw.githubusercontent.com/NebzHB/nodejs_install/main/install_nodejs.sh -O $BASEDIR/install_nodejs.sh &>/dev/null
@@ -16,12 +14,10 @@ sudo wget https://raw.githubusercontent.com/NebzHB/nodejs_install/main/install_n
 installVer='14' 	#NodeJS major version to be installed
 
 pre
-
+step 0 "Début d'installation des dépendances"
 if [ -f ${BASEDIR}/trafficmirror_version ]; then
-	sudo rm -f ${BASEDIR}/trafficmirror_version
+	silent sudo rm -f ${BASEDIR}/trafficmirror_version
 fi
-
-step 0 "Début d'installation des dependances"
 cd ${BASEDIR}
 sudo rm -rf nodes_modules
 sudo rm -f package-lock.json

@@ -134,12 +134,12 @@ class trafficmirror extends eqLogic {
 
     public static function dependancy_info() {
 
-      	$return = array();
-        $filename = dirname(__FILE__) . '/../../resources/trafficmirror_version';
-    	$return['log']   = __CLASS__ . '_dependancy';
-        $return['state'] = (file_exists($filename)) ? 'ok' : 'in_progress';
-    	return $return;
-
+		$return = array();
+		$return['log']   = __CLASS__ . '_dependancy';
+        $return['progress_file'] = jeedom::getTmpFolder('trafficmirror') . '/dependancy';
+		$filename = dirname(__FILE__) . '/../../resources/trafficmirror_version';
+		$return['state'] = (file_exists($filename)) ? 'ok' : 'nok';
+        return $return;
     }
 
 
