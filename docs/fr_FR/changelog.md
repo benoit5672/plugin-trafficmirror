@@ -4,6 +4,6 @@
 >
 >Pour rappel s'il n'y a pas d'information sur la mise à jour, c'est que celle-ci concerne uniquement de la mise à jour de documentation, de traduction ou de texte.
 
-# 06/09/2021
+# 14/10/2021
 
-- Premiere beta. Le plugin permet creer des mirroirs pour tcp et udp
+- beta-v0.1 : Le plugin permet créer des miroirs pour TCP et UDP, et ainsi de dupliquer des flux a des fins de tests, ou simplement pour avoir la meme information sur deux serveurs simultanément.

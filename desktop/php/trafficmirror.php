@@ -153,15 +153,15 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label"> {{Mirroir}}</label>
+								<label class="col-sm-3 control-label"> {{Miroir}}</label>
 								<div class="col-sm-7">
-									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mirrorHost" placeholder="{{IP ou FQDN du mirroir}}"/>
+									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mirrorHost" placeholder="{{IP ou FQDN du miroir}}"/>
 								</div>
 							</div>
 							<div class="form-group">
-								<label class="col-sm-3 control-label"> {{Mirroir port}}</label>
+								<label class="col-sm-3 control-label"> {{Miroir port}}</label>
 								<div class="col-sm-7">
-									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mirrorPort" placeholder="{{port du mirroir}}"/>
+									<input type="text" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mirrorPort" placeholder="{{port du miroir}}"/>
 								</div>
 							</div>
 							<div class="form-group">
