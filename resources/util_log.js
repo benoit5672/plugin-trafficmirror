@@ -58,7 +58,7 @@ Logger.prototype.setLogLevel = function(level) {
             self.level = INFO;
             break;
         case 'warning':
-            self.level = WARN;
+            self.level = WARNING;
             break;
         case 'error':
             self.level = ERROR;
@@ -73,7 +73,7 @@ Logger.prototype.getLogLevel = function() {
     switch(self.level) {
         case DEBUG:
             return 'debug';
-        case WARN:
+        case WARNING:
             return 'warning';
         case ERROR:
             return 'error';
