@@ -19,8 +19,8 @@ if [ -f ${BASEDIR}/trafficmirror_version ]; then
 	silent sudo rm -f ${BASEDIR}/trafficmirror_version
 fi
 cd ${BASEDIR}
-sudo rm -rf nodes_modules
-sudo rm -f package-lock.json
+silent sudo rm -rf nodes_modules
+silent sudo rm -f package-lock.json
 
 step 5 "Mise à jour APT et installation des packages nécessaires"
 try sudo apt-get update
@@ -30,7 +30,7 @@ try sudo apt-get update
 . ${BASEDIR}/install_nodejs.sh ${installVer}
 
 step 60 "Installation des dépendances"
-sudo npm install
+try sudo -E -n npm install --no-fund --no-package-lock --no-audit
 
 step 90 "Fin d'installation des dépendances"
 sudo touch ${BASEDIR}/trafficmirror_version
