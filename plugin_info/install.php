@@ -18,18 +18,48 @@
 
 require_once dirname(__FILE__) . '/../../../core/php/core.inc.php';
 
+function deleteDirectory($dirPath) {
+    if (is_dir($dirPath)) {
+        $objects = scandir($dirPath);
+        foreach ($objects as $object) {
+            if ($object != "." && $object !="..") {
+                if (filetype($dirPath . DIRECTORY_SEPARATOR . $object) == "dir") {
+                    deleteDirectory($dirPath . DIRECTORY_SEPARATOR . $object);
+                } else {
+                    unlink($dirPath . DIRECTORY_SEPARATOR . $object);
+                }
+            }
+        }
+        reset($objects);
+        rmdir($dirPath);
+    }
+}
+
 // Fonction exécutée automatiquement après l'installation du plugin
-  function template_install() {
+  function trafficmirror_install() {
 
   }
 
 // Fonction exécutée automatiquement après la mise à jour du plugin
-  function template_update() {
-
+  function trafficmirror_update() {
+      // files to remove, after migrating from nodejs to python3
+      $files = ['dependance.lib', 'install_nodejs.sh', 'install.sh',
+                'package.json', 'tcp-mirror.js', 'udp-mirror.js',
+                'trafficmirrord.js', 'trafficmirror_version',
+                'util_log.js'];
+      $dirs =  ['node_modules'];
+      foreach ($files as $f) {
+          $path = dirname(__FILE__) . '/' . $f;
+          unlink($path);
+      }
+      foreach ($dirs as $d) {
+          $path = dirname(__FILE__) . '/' . $d;
+          deleteDirectory($path);
+      }
   }
 
 // Fonction exécutée automatiquement après la suppression du plugin
-  function template_remove() {
+  function trafficmirror_remove() {
 
   }
 

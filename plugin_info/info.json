@@ -9,7 +9,7 @@
 	"author" : "benoit5672",
 	"require" : "4.0.0",
 	"category" : "communication",
-	"hasDependency" : true,
+	"hasDependency" : false,
 	"hasOwnDeamon" : true,
 	"maxDependancyInstallTime" : 60,
 	"changelog" : "https://benoit5672.github.io/plugin-trafficmirror/#language#/changelog",

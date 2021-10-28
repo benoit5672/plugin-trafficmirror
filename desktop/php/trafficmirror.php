@@ -176,8 +176,8 @@ $eqLogics = eqLogic::byType($plugin->getId());
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{Paquet a copier}}</label>
 								<div class="col-sm-7">
-								    <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="clientTX" checked/>{{Trafic envoyé par le client}}</label>
-									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="targetRX" />{{Trafic reçu de la destination (serveur)}}</label>
+									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="mirrorRx"/>{{Trafic du miroir vers le client}}</label>
+									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="targetRx" />{{Trafic de la destination vers le miroir}}</label>
 								</div>
 							</div>
 						</div>
