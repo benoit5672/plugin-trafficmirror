@@ -397,3 +397,5 @@ if pm != None and len(pm['value']) > 0:
                                     mirror['targetRx'], mirror['mirrorRx'],
                                     jc)
             MIRRORS[id].start()
+        else:
+            logging.warning('Unknown protocol {}'.format(mirror['protocol']))

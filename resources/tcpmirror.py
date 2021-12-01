@@ -17,8 +17,9 @@
 
 '''
 import logging
-import select
+import time
 import socket
+from socket import error as socket_error
 
 from mirror import Mirror
 
@@ -51,14 +52,26 @@ class TcpMirror(Mirror):
 
     def _createTargetSocket(self, addr, port):
         targetSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        targetSocket.connect((addr, port))
-        targetSocket.setblocking(0)
-        return targetSocket
+        targetSocket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 4096)
+        targetSocket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        retry = 0;
+        while retry < 3:
+            try:
+                targetSocket.connect((addr, port))
+                #targetSocket.setblocking(0)
+                return targetSocket
+            except ConnectionRefusedError:
+                logging.info('    Connection to target was refused, retry')
+                retry = retry + 1
+                time.sleep(1/8)
+
 
     def _createMirrorSocket(self, addr, port):
         mirrorSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        mirrorSocket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 4096)
+        mirrorSocket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         mirrorSocket.connect((addr, port))
-        mirrorSocket.setblocking(0)
+        #mirrorSocket.setblocking(0)
         return mirrorSocket
 
     def _recvData(self, sock):

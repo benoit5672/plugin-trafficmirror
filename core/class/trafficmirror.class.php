@@ -146,8 +146,8 @@ class trafficmirror extends eqLogic {
 		        		}
             		}
 	        	}
-            } catch( Exception $ex) {
-                log::add('trafficmirror', 'info', print_r($ex));
+            } catch(Exception $ex) {
+                log::add('trafficmirror', 'error', $ex->getMessage());
             } finally {
                 fclose($fp);
             }
@@ -288,7 +288,7 @@ class trafficmirror extends eqLogic {
               if (is_object($mirror) && $mirror->getIsEnable() == 1) {
 				  $stats = $mirror->daemonGetStatistics();
 				  if ($stats === undefined) {
-					  log::add('trafficmirror', 'error', __('Le miroir ' . $mirror->getId() . 'n\'est pas présent dans le démon', __FILE__));
+					  //log::add('trafficmirror', 'error', __('Le miroir ' . $mirror->getId() . 'n\'est pas présent dans le démon', __FILE__));
 					  continue;
 				  }
 			 	  $mirror->updateStatistics($stats);

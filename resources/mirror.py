@@ -23,7 +23,7 @@ import logging
 import select
 import socket
 import threading
-import json
+import struct
 
 
 class Mirror:
@@ -82,7 +82,7 @@ class Mirror:
             'clientRxPkts'      : self.__clientRxPkts,
             'clientErrPkts'     : self.__clientErrPkts,
             'targetRxPkts'      : self.__targetRxPkts,
-            'targetRxPkts'      : self.__targetTxPkts,
+            'targetTxPkts'      : self.__targetTxPkts,
             'targetErrPkts'     : self.__targetErrPkts,
             'mirrorRxPkts'      : self.__mirrorRxPkts,
             'mirrorTxPkts'      : self.__mirrorTxPkts,
@@ -148,18 +148,22 @@ class Mirror:
                             # We have created target and mirror socket
                             # we accept the connection from the client (SYN/ACK)
                             client, addr = s.accept()
-                            logging.info('  Accept client {} connection from {}:{}'.format(self.__protocol, addr[0], addr[1]))
-                            client.setblocking(0)
+                            logging.info('  accept client {} connection from {}:{}'.format(self.__protocol, addr[0], addr[1]))
+                            #client.setblocking(0)
                             self.__clientConnections = self.__clientConnections + 1
                             self.__storeConnections(client, target, mirror)
                             break
                         else:
                             logging.error('{} connection is closed because mirror or target refused the connection request'.format(self.__protocol))
+                            # Accept and close with RST
                             client, addr = s.accept()
+                            client.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack('ii', 1, 0))
                             client.close()
                             if (target != None):
+                                target.shutdown(socket.SHUT_RDWR)
                                 target.close()
                             if (mirror != None):
+                                mirror.shutdown(socket.SHUT_RDWR)
                                 mirror.close()
                             break
                     else:
@@ -269,13 +273,13 @@ class Mirror:
 
     def __closeConnections(self, sock=None):
         if (sock == None):
-            logging.info('  close all {} connections attached with {}:{}'.format(self.__protocol, self.__localAddr, self.__localPort))
+            logging.info('Close all {} connections attached with {}:{}'.format(self.__protocol, self.__localAddr, self.__localPort))
             socks = []
             for key in self.__connections:
                 if self.__connections[key]['mode'] == 'client':
                     socks.append(key)
         else:
-            logging.info('  close {} connections attached with {}'.format(self.__protocol, sock.getpeername()))
+            logging.info('Close {} connections attached with {}'.format(self.__protocol, sock.getpeername()))
             socks = [sock]
 
         for key in socks:
@@ -283,9 +287,11 @@ class Mirror:
             for s in self.__connections[key]['peers']:
                 logging.info('   remove and close {} connection to {}'.format(self.__protocol, s.getpeername()))
                 self.__sockets.remove(s)
+                s.shutdown(socket.SHUT_RDWR)
                 s.close()
             logging.info('   remove and close {} connection to {}'.format(self.__protocol, sock.getpeername()))
             self.__sockets.remove(key)
+            key.shutdown(socket.SHUT_RDWR)
             key.close()
 
             # clean memory
