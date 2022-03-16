@@ -154,7 +154,7 @@ class trafficmirror extends eqLogic {
         }
         $result = (is_json($result)) ? json_decode($result, true) : $result;
 		if ($result['return_code'] != $expected) {
-			log::add('trafficmirror', 'error:' . $result['result'] . '(' . $result['return_code'] . ')');
+			log::add('trafficmirror', 'error', 'error:' . $result['result'] . '(' . $result['return_code'] . ')');
 			throw new Exception($result[$return_code]);
 		}
         log::add('trafficmirror', 'debug', 'result daemonCommunication '.print_r($result, true));
