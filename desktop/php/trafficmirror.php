@@ -169,7 +169,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<div class="col-sm-7">
 									<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="protocol">
 										<option value="tcp" selected="selected">{{TCP}}</option>
-										<option value="udp">{{UDP}}</option>
+										<!--option value="udp">{{UDP}}</option-->
 									</select>
 								</div>
 							</div>
