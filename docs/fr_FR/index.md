@@ -1,7 +1,7 @@
 
 # Description
 
-Ce plugin permet de dupliquer des flux TCP ou UDP vers un serveur "miroir". Le plugin agit comme un proxy, c'est a dire que les clients vont envoyer leurs requêtes vers le proxy plutôt que vers le serveur destination, et le plugin se chargera de transmettre cette requête au serveur, et au miroir.
+Ce plugin permet de dupliquer des flux TCP vers un serveur "miroir". Le plugin agit comme un proxy, c'est a dire que les clients vont envoyer leurs requêtes vers le proxy plutôt que vers le serveur destination, et le plugin se chargera de transmettre cette requête au serveur, et au miroir.
 
 Grâce à ce plugin, vous pouvez renvoyer des informations a un serveur de tests, ou comme c'est mon cas, dupliquer les informations pour réaliser le traitement a la fois dans Jeedom, et sur le serveur réel.
 En effet, ma centrale d'alarme ne me permet pas d'envoyer les meme informations a deux serveurs différents. Donc, ma centrale envoie les informations a trafficmirror, qui se charge de les transmettre a Jeedom et a la télésurveillance.
@@ -12,7 +12,7 @@ Bien sur, il faut dans ce cas de la redondance pour s'assurer que la centrale po
 
 Afin d'utiliser le plugin, vous devez le télécharger, l'installer et l'activer comme tout plugin Jeedom.
 
-Une fois le plugin activé, vous devez installer les dépendances. En effet, le plugin repose sur un demon (nodejs) pour prendre en charges les requêtes TCP et UDP.
+Une fois le plugin activé, vous devez installer les dépendances. En effet, le plugin repose sur un demon (python) pour prendre en charges les requêtes TCP.
 
 Ne modifiez pas le port par default d’écoute du demon, il s'agit du port de communication entre le demon et Jeedom. Si toutefois ce port est déjà utilise, alors vous pouvez en sélectionner un nouveau.
 
@@ -27,10 +27,10 @@ La configuration est simple.
 
 ![general](../assets/images/config.png)
 
-- Local port : le port TCP ou UDP sur lequel l’équipement va écouter les requêtes clientes.
+- Local port : le port TCP sur lequel l’équipement va écouter les requêtes clientes.
 - destination IP ou FQDN et port : cela représente les informations du serveur. Sans ce plugin, ceux sont les informations que vous auriez configure sur le client.
 - miroir IP ou FQDN et port : cela représente les informations du miroir.
-- protocole: TCP ou UDP
+- protocole: TCP
 - paquet a copier : permet de choisir les informations qui seront transmises au miroir. Par défaut, les informations reçues du client sont envoyées au miroir ("*Trafic envoyé par le client*" est sélectionné), mais les informations reçu du serveur destination ne sont pas renvoyé au miroir ("*trafic reçu de la destination*" n'est pas sélectionné).
 
 Une fois sauvegarde, l’équipement est automatiquement ajoute dans le demon, et est prêt a recevoir des requêtes.
