@@ -169,15 +169,15 @@ $eqLogics = eqLogic::byType($plugin->getId());
 								<div class="col-sm-7">
 									<select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="protocol">
 										<option value="tcp" selected="selected">{{TCP}}</option>
-										<option value="udp">{{UDP}}</option>
+										<!--option value="udp">{{UDP}}</option-->
 									</select>
 								</div>
 							</div>
 							<div class="form-group">
 								<label class="col-sm-3 control-label">{{Paquet a copier}}</label>
 								<div class="col-sm-7">
-								    <label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="clientTX" checked/>{{Trafic envoyé par le client}}</label>
-									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="targetRX" />{{Trafic reçu de la destination (serveur)}}</label>
+									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="mirrorRx"/>{{Trafic du miroir vers le client}}</label>
+									<label class="checkbox-inline"><input type="checkbox" class="eqLogicAttr" data-l1key="configuration" data-l2key="targetRx" />{{Trafic de la destination vers le miroir}}</label>
 								</div>
 							</div>
 						</div>
@@ -193,9 +193,10 @@ $eqLogics = eqLogic::byType($plugin->getId());
 					<table id="table_cmd" class="table table-bordered table-condensed">
 						<thead>
 							<tr>
-								<th>{{Id}}</th>
 								<th>{{Nom}}</th>
+								<th>{{Type}}</th>
 								<th>{{Options}}</th>
+								<th>{{Etat}}</th>
 								<th>{{Action}}</th>
 							</tr>
 						</thead>

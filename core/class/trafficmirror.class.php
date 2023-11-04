@@ -1,5 +1,4 @@
 <?php
-
 /* This file is part of Jeedom.
  *
  * Jeedom is free software: you can redistribute it and/or modify
@@ -46,16 +45,7 @@ class trafficmirror extends eqLogic {
            }
        }
        $return['launchable'] = 'ok';
-
-       if (trafficmirror::dependancy_info()['state'] == 'nok') {
-           $cache = cache::byKey('dependancy' . 'trafficmirror');
-           $cache->remove();
-           $return['launchable'] = 'nok';
-           $return['launchable_message'] = __('Veuillez (ré-)installer les dépendances', __FILE__);
-           return $return;
-       }
        return $return;
-
     }
 
     public static function deamon_start() {
@@ -67,16 +57,17 @@ class trafficmirror extends eqLogic {
         if ($deamon_info['launchable'] != 'ok') {
             throw new Exception(__('Veuillez vérifier la configuration', __FILE__));
         }
-        $servicePort = config::byKey('servicePort', 'trafficmirror', 15003);
-        $deamon_path = dirname(__FILE__) . '/../../resources';
-        //$callback = network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/trafficmirror/core/php/trafficmirror.php';
 
-        $cmd  = 'sudo nice -n 19 node "'. $deamon_path . '/trafficmirrord.js" ';
-        $cmd .= ' --port ' . $servicePort;
+        $deamon_path = dirname(__FILE__) . '/../../resources';
+        $tcpport = config::byKey('servicePort', 'trafficmirror', 15003);
+		$callback = network::getNetworkAccess('internal', 'proto:127.0.0.1:port:comp') . '/plugins/trafficmirror/core/php/trafficmirror.php';
+
+		$cmd = '/usr/bin/python3 ' . $deamon_path . '/trafficmirrord.py ';
         $cmd .= ' --loglevel ' . log::convertLogLevel(log::getLogLevel('trafficmirror'));
-        //$cmd .= ' --apikey ' . jeedom::getApiKey('trafficmirror');
+        $cmd .= ' --apikey ' . jeedom::getApiKey('trafficmirror');
         $cmd .= ' --pidfile ' . jeedom::getTmpFolder('trafficmirror') . '/daemon.pid';
-        //$cmd .= ' --callback ' . $callback;
+        $cmd .= ' --socket ' . jeedom::getTmpFolder('trafficmirror') . '/daemon.sock';
+        $cmd .= ' --callback ' . $callback;
 
         log::add('trafficmirror', 'info', 'Lancement démon trafficmirror : ' . $cmd);
         exec($cmd . ' >> ' . log::getPathToLog('trafficmirror') . ' 2>&1 &');
@@ -94,15 +85,7 @@ class trafficmirror extends eqLogic {
             log::add('trafficmirror', 'error', 'Impossible de lancer le démon trafficmirror, relancer le démon en debug et vérifiez la log', 'unableStartDeamon');
             return false;
         }
-
         message::removeAll('trafficmirror', 'unableStartDeamon');
-
-		// 1. get all eqLogic mirror objects, and add the mirrors in the daemon
-		foreach (self::byType(__CLASS__) as $mirror) {
-            if (is_object($mirror) && $mirror->getIsEnable() == 1) {
-				$mirror->daemonAddMirror();
-			}
-		}
 
         log::add('trafficmirror', 'info', 'Démon trafficmirror lancé');
 	}
@@ -132,143 +115,116 @@ class trafficmirror extends eqLogic {
 		log::add('trafficmirror', 'debug', 'daemon stopped');
     }
 
-    public static function dependancy_info() {
-
-		$return = array();
-		$return['log']   = __CLASS__ . '_dependancy';
-        $return['progress_file'] = jeedom::getTmpFolder('trafficmirror') . '/dependancy';
-		$filename = dirname(__FILE__) . '/../../resources/trafficmirror_version';
-		$return['state'] = (file_exists($filename)) ? 'ok' : 'nok';
-        return $return;
-    }
-
-
-    public static function dependancy_install() {
-		log::add('trafficmirror', 'debug', 'Install dependancy');
-        // Remove the existing log file, if any
-        log::remove(__CLASS__ . '_dependancy');
-        return [
-            'script' => dirname(__FILE__) . '/../../resources/install.sh ' . jeedom::getTmpFolder('trafficmirror') . '/dependancy',
-            'log' => log::getPathToLog(__CLASS__ . '_dependancy')
-        ];
-  	}
-
 	/**
 	* Function used to populate the daemon
 	*/
 	//
-    private static function daemonCommunication($_verb, $_options = array()) {
-		$servicePort = config::byKey('servicePort', 'trafficmirror', 15003);
-		$url         = 'http://localhost:' . $servicePort . '/mirrors/';
+    private static function daemonCommunication($_action, $expected, $_args = array()) {
+		$socketPort = config::byKey('servicePort', 'trafficmirror', 15003);
+		$sock       = 'unix://' . jeedom::getTmpFolder('trafficmirror') . '/daemon.sock';
 
-        if ($_verb === 'GET' || $_verb === 'DELETE') {
-			if (isset($_options['id'])) {
-            	$url = $url . urlencode($_options['id']);
-			}
-            $data = [];
-        } else {
-            // 'POST', 'PUT' . Copy the _options into a new array
-			$data = $_options;
-			if ($_verb === 'PUT') {
-				$url = $url . urlencode($_options['id']);
-				unset($data['id']);
-			}
-        }
-        //log::add('trafficmirror', 'debug', ' url ' . $url . ', data=' . print_r($data, true));
+		$query = array(
+           'action' => $_action,
+           'args' => $_args,
+           'apikey' => jeedom::getApiKey('trafficmirror')
+        );
 
-        $nbRetry  = 0;
-        $maxRetry = 3;
-        while ($nbRetry < $maxRetry) {
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_HEADER, false);
-            //curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            if (count($data) > 0) {
-                curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-            }
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 3);
-            curl_setopt($ch, CURLOPT_FORBID_REUSE, true);
-            curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
+		$fp = stream_socket_client($sock, $errno, $errstr, 5);
+        $result = '';
+        log::add('trafficmirror', 'debug', 'stream socket error ' . $errno .' : '. $errstr);
 
-            // set the verb (POST, GET, DELETE)
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $_verb);
-
-            $rsp = curl_exec($ch);
-            $nbRetry++;
-            if (curl_errno($ch) && $nbRetry < $maxRetry) {
-                curl_close($ch);
-                usleep(500000);
-            } else {
-                $nbRetry = $maxRetry + 1;
+        if ($fp) {
+            try {
+		        stream_set_timeout($fp, 5);
+                if (false !== fwrite($fp, json_encode($query))) {
+                    while (!feof($fp)) {
+                        $result .= fgets($fp, 1024);
+	                	$info = stream_get_meta_data($fp);
+		        		if ($info['timed_out']) {
+                            log::add('trafficmirror', 'error', 'timeout in callDaemon('.$sock.') '.print_r($result, true));
+			    			$result = '';
+		        		}
+            		}
+	        	}
+            } catch(Exception $ex) {
+                log::add('trafficmirror', 'error', $ex->getMessage());
+            } finally {
+                fclose($fp);
             }
         }
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        log::add('trafficmirror', 'debug', 'Response : ' . $rsp . ', code=' . $http_code);
-        if (($_verb === 'DELETE' && $http_code != 204)
-            || ($_verb === 'POST' && $http_code != 201)
-            || ($_verb === 'GET' && $http_code != 200)) {
-            throw new Exception($http_code);
-        }
-        return json_decode($rsp, true);
+        $result = (is_json($result)) ? json_decode($result, true) : $result;
+		if ($result['return_code'] != $expected) {
+			log::add('trafficmirror', 'error', 'error:' . $result['result'] . '(' . $result['return_code'] . ')');
+			throw new Exception($result[$return_code]);
+		}
+        log::add('trafficmirror', 'debug', 'result daemonCommunication '.print_r($result, true));
+        return $result['result'];
     }
 
 
-	private static function daemonGetMirrors() {
-		log::add('trafficmirror', 'debug', 'daemonGetMirrors');
+	private function daemonExistMirror() {
+		log::add('trafficmirror', 'debug', 'daemonExistMirror');
 		try {
-			return self::daemonCommunication('GET', array());
+			return (self::daemonCommunication('exist_mirror', '200', array('id' => $this->getId())) == 1);
 		} catch (Exception $e) {
 			log::add('trafficmirror', 'error', 'Erreur: ' . $e->getMessage());
-			return [];
 		}
 	}
 
-	private function daemonGetMirror() {
-		log::add('trafficmirror', 'debug', 'daemonGetMirror');
+	private function daemonGetStatistics() {
+		log::add('trafficmirror', 'debug', 'daemonGetStatistics');
 		try {
-			return self::daemonCommunication('GET', array('id' => $this->getId()));
+			return self::daemonCommunication('get_statistics', '200', array('id' => $this->getId()));
 		} catch (Exception $e) {
-			if ($e->getMessage() !== '404') {
-				log::add('trafficmirror', 'error', 'Erreur: ' . $e->getMessage());
-			}
-			return [];
-		}
-	}
-
-	private function daemonDeleteMirror() {
-		log::add('trafficmirror', 'debug', 'daemonDeleteMirror');
-		try {
-			return self::daemonCommunication('DELETE', array('id' => $this->getId()));
-		} catch (Exception $e) {
-			if ($e->getMessage() !== '404') {
+			if ($e->getMessage() != '404') {
 				log::add('trafficmirror', 'error', 'Erreur: ' . $e->getMessage());
 			}
 		}
 	}
 
-	private function daemonAddMirror() {
-		log::add('trafficmirror', 'debug', 'daemonAddMirror');
+	private function daemonClearStatistics() {
+		log::add('trafficmirror', 'debug', 'daemonClearStatistics');
+		try {
+			return self::daemonCommunication('clear_statistics', '200', array('id' => $this->getId()));
+		} catch (Exception $e) {
+			if ($e->getMessage() != '404') {
+				log::add('trafficmirror', 'error', 'Erreur: ' . $e->getMessage());
+			}
+		}
+	}
+
+
+	private function daemonRemoveMirror() {
+		log::add('trafficmirror', 'debug', 'daemonRemoveMirror');
+		try {
+			return self::daemonCommunication('remove_mirror', '204', array('id' => $this->getId()));
+		} catch (Exception $e) {
+			if ($e->getMessage() != '404') {
+				log::add('trafficmirror', 'error', 'Erreur: ' . $e->getMessage());
+			}
+		}
+	}
+
+	private function daemonInsertMirror() {
+		log::add('trafficmirror', 'debug', 'daemonInsertMirror');
 		$payload = array(
 						 'id' 		  => $this->getId(),
+						 'localAddr'  => '0.0.0.0',
 						 'localPort'  => $this->getConfiguration('localPort'),
 						 'mirrorHost' => $this->getConfiguration('mirrorHost'),
 						 'mirrorPort' => $this->getConfiguration('mirrorPort'),
 						 'targetHost' => $this->getConfiguration('targetHost'),
 						 'targetPort' => $this->getConfiguration('targetPort'),
 						 'protocol'   => $this->getConfiguration('protocol'),
-						 'clientTX'   => $this->getConfiguration('clientTX', 0),
-						 'targetRX'   => $this->getConfiguration('targetRX', 0),
+						 'mirrorRx'   => $this->getConfiguration('mirrorRx', 0),
+						 'targetRx'   => $this->getConfiguration('targetRx', 0),
 					  );
 		try {
-			self::daemonCommunication('POST', $payload);
+			self::daemonCommunication('insert_mirror', '201', $payload);
 		} catch (Exception $e) {
-			if ($e->getMessage === '409') {
+			if ($e->getMessage() == '409') {
 				// Use update instead
-				log::add('trafficmirror', 'debug', 'le miroir existe déjà, utiliser PUT pour le mettre a jour');
+				log::add('trafficmirror', 'debug', 'le miroir existe déjà, utiliser daemonUpdateMirror pour le mettre a jour');
 			} else {
 				log::add('trafficmirror', 'error', 'Erreur: ' . $e->getMessage());
 			}
@@ -279,55 +235,34 @@ class trafficmirror extends eqLogic {
 		log::add('trafficmirror', 'debug', 'daemonUpdateMirror');
 		$payload = array(
 						 'id' 		  => $this->getId(),
+						 'localAddr'  => '0.0.0.0',
+						 'localPort'  => $this->getConfiguration('localPort'),
 						 'mirrorHost' => $this->getConfiguration('mirrorHost'),
 						 'mirrorPort' => $this->getConfiguration('mirrorPort'),
 						 'targetHost' => $this->getConfiguration('targetHost'),
 						 'targetPort' => $this->getConfiguration('targetPort'),
 						 'protocol'   => $this->getConfiguration('protocol'),
-						 'clientTX'   => $this->getConfiguration('clientTX', 0),
-						 'targetRX'   => $this->getConfiguration('targetRX', 0),
+						 'mirrorRx'   => $this->getConfiguration('mirrorRx', 0),
+						 'targetRx'   => $this->getConfiguration('targetRx', 0),
 					  );
 		try {
-			self::daemonCommunication('PUT', $payload);
+			self::daemonCommunication('update_mirror', '200', $payload);
 		} catch (Exception $e) {
 			log::add('trafficmirror', 'error', 'Erreur: ' . $e->getMessage());
 		}
 	}
 
-	private function daemonClearStatistics() {
-		log::add('trafficmirror', 'debug', 'daemonClearStatistics');
-
-		$payload = array(
-						 'id' 		         => $this->getId(),
-						 'clientConnections' => 0,
-						 'targetConnections' => 0,
-						 'mirrorConnections' => 0,
-						 'targetErrConnect'  => 0,
-						 'mirrorErrConnect'  => 0,
-						 'clientRxPkts'      => 0,
-						 'clientTxPkts'      => 0,
-						 'targetRxPkts'      => 0,
-						 'targetTxPkts'      => 0,
-						 'targetErrPkts'     => 0,
-						 'mirrorRxPkts'      => 0,
-						 'mirrorTxPkts'      => 0,
-						 'mirrorErrPkts'     => 0
-					 );
-		try {
-			self::daemonCommunication('PUT', $payload);
-		} catch (Exception $e) {
-			log::add('trafficmirror', 'error', 'Erreur: ' . $e->getMessage());
-		}
-	}
+	public static function daemonChangeLogLive($_level) {
+        self::daemonCommunication($_level, '200');
+    }
 
 
 	private function updateStatistics($stats) {
 
 		$infos = [
-		   'isListening',
 		   'clientConnections', 'targetConnections', 'mirrorConnections',
 		   'targetErrConnect', 'mirrorErrConnect',
-		   'clientRxPkts', 'clientTxPkts',
+		   'clientRxPkts', 'clientTxPkts', 'clientErrPkts',
 		   'targetRxPkts', 'targetTxPkts', 'targetErrPkts',
 		   'mirrorRxPkts', 'mirrorTxPkts', 'mirrorErrPkts',
 	   ];
@@ -335,7 +270,6 @@ class trafficmirror extends eqLogic {
 	   foreach ($infos as $info) {
 		   $this->checkAndUpdateCmd($info, $stats[$info]);
 	   }
-
 	}
     /*
      * Fonction exécutée automatiquement toutes les minutes par Jeedom
@@ -346,31 +280,20 @@ class trafficmirror extends eqLogic {
     /*
      * Fonction exécutée automatiquement toutes les 5 minutes par Jeedom
 	 */
-      public static function cron5() {
-		  /* Do the polling to get statistics from the daemon */
-		  $daemon_mirrors = self::daemonGetMirrors();
 
+      public static function cron5() {
 		  // 1. get all eqLogic mirror objects and update with the information
 		  // fetch from daemon
   		  foreach (self::byType(__CLASS__) as $mirror) {
               if (is_object($mirror) && $mirror->getIsEnable() == 1) {
-				  $stats = $daemon_mirrors[$mirror->getId()];
+				  $stats = $mirror->daemonGetStatistics();
 				  if ($stats === undefined) {
-					  log::add('trafficmirror', 'error',
-					           __('Le miroir ' . $mirror->getId() . 'n\'est pas présent dans le démon', __FILE__));
+					  //log::add('trafficmirror', 'error', __('Le miroir ' . $mirror->getId() . 'n\'est pas présent dans le démon', __FILE__));
 					  continue;
 				  }
 			 	  $mirror->updateStatistics($stats);
-
-				  // 2. delete the informartion
-				  unset($daemon_mirrors[$mirror->getId()]);
 			 }
   		  }
-		  // 3. $daemon_mirrors should be empty, otherwise we have zombies
-		  foreach ($daemon_mirrors as $key => $value) {
-			  log::add('trafficmirror', 'error',
-					   __('Le miroir ' . $key . 'n\'est pas présent dans le démon mais pas dans la configuration', __FILE__));
-		  }
       }
 
     /*
@@ -407,7 +330,7 @@ class trafficmirror extends eqLogic {
 
     /*     * *********************Méthodes d'instance************************* */
 
- // Fonction exécutée automatiquement avant la création de l'équipement
+ // Fonction exécutée  avant la création de l'équipement
     public function preInsert() {
 		log::add('trafficmirror', 'debug', 'Entering preInsert: ' . $this->getHumanName());
     }
@@ -456,17 +379,17 @@ class trafficmirror extends eqLogic {
 
 		// Send the information to the daemon. Update if necessary, otherwise create
 		// the new object
-		$isInDaemon = (count($this->daemonGetMirror()) > 0);
-		if ($this->getIsEnable() == 1) {
-			if ($isInDaemon === false) {
-				$this->daemonAddMirror();
+		$isInDaemon = $this->daemonExistMirror();
+		if ($this->getIsEnable() == true) {
+			if ($isInDaemon == false) {
+				$this->daemonInsertMirror();
 			} else {
 				$this->daemonUpdateMirror();
 			}
     	} else {
 			// The mirror has been disabled, remove it from the daemon
-			if ($isInDaemon === true) {
-				$this->daemonDeleteMirror();
+			if ($isInDaemon == true) {
+				$this->daemonRemoveMirror();
 			}
 		}
 	}
@@ -513,7 +436,7 @@ class trafficmirror extends eqLogic {
 		$cmd = $this->getCmd(null, 'isListening');
 		if (!is_object($cmd)) {
 			$cmd = new trafficmirrorCmd();
-			$cmd->setLogicalId('isListening');
+			$cmd->setLogicalId('');
 			$cmd->setIsVisible(1);
 			$cmd->setName(__('Opérationnel', __FILE__));
             $cmd->setOrder($order++);
@@ -527,7 +450,7 @@ class trafficmirror extends eqLogic {
 		$stats = [
 			'clientConnections', 'targetConnections', 'mirrorConnections',
 			'targetErrConnect', 'mirrorErrConnect',
-			'clientRxPkts', 'clientTxPkts',
+			'clientRxPkts', 'clientTxPkts', 'clientErrPkts',
 			'targetRxPkts', 'targetTxPkts', 'targetErrPkts',
 			'mirrorRxPkts', 'mirrorTxPkts', 'mirrorErrPkts',
 		];
@@ -551,7 +474,7 @@ class trafficmirror extends eqLogic {
  // Fonction exécutée automatiquement avant la suppression de l'équipement
     public function preRemove() {
 		log::add('trafficmirror', 'debug', 'Entering preRemove: ' . $this->getHumanName());
-		$this->daemonDeleteMirror();
+		$this->daemonRemoveMirror();
     }
 
  // Fonction exécutée automatiquement après la suppression de l'équipement
@@ -568,9 +491,7 @@ class trafficmirror extends eqLogic {
 
 	 public function refresh() {
 		 log::add('trafficmirror', 'debug', 'Entering refresh: ' . $this->getHumanName());
-
-		 $rsp = self::daemonGetMirror();
-		 $this->updateStatistics($rsp);
+		 $this->updateStatistics($this->daemonGetStatistics());
 	 }
 
 	 public function clearStatistics() {
@@ -580,7 +501,7 @@ class trafficmirror extends eqLogic {
 		 $stats = [
  			'clientConnections', 'targetConnections', 'mirrorConnections',
 			'targetErrConnect', 'mirrorErrConnect',
- 			'clientRxPkts', 'clientTxPkts',
+ 			'clientRxPkts', 'clientTxPkts', 'clientErrPkts',
  			'targetRxPkts', 'targetTxPkts', 'targetErrPkts',
  			'mirrorRxPkts', 'mirrorTxPkts', 'mirrorErrPkts',
  		];
