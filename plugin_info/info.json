@@ -8,6 +8,7 @@
 	"licence" : "AGPL",
 	"author" : "benoit5672",
 	"require" : "4.0.0",
+	"version": "1.0.0",
 	"category" : "communication",
 	"hasDependency" : false,
 	"hasOwnDeamon" : true,
